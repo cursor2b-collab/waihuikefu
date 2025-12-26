@@ -9,8 +9,8 @@
 
 ## 当前配置信息
 
-- **项目ID**: xfcbxphhesbhazmjaztj
-- **项目URL**: https://xfcbxphhesbhazmjaztj.supabase.co
+- **项目ID**: zjodvwgmwwgixwpyuvos
+- **项目URL**: https://zjodvwgmwwgixwpyuvos.supabase.co
 - **Anon Key**: 已配置在代码中（建议使用环境变量）
 
 ## 环境变量配置
@@ -18,8 +18,8 @@
 1. 在项目根目录创建 `.env` 文件：
 
 ```env
-VITE_SUPABASE_URL=https://xfcbxphhesbhazmjaztj.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmY2J4cGhoZXNiaGF6bWphenRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MzA2MDQsImV4cCI6MjA3NjIwNjYwNH0.Fe3NMFJn8_rQDRbIKEc-SwLTC2Zj9AyVLtwJZF4IlVY
+VITE_SUPABASE_URL=https://zjodvwgmwwgixwpyuvos.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpqb2R2d2dtd3dnaXh3cHl1dm9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3MzI2MTcsImV4cCI6MjA4MjMwODYxN30.8MtKA1siDQ7opsqN9uhPsq9ui_tYsfEQexvIqBjkNoc
 ```
 
 ## 数据库表说明
@@ -60,11 +60,17 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 
 ## 安全说明
 
-⚠️ **重要**: 当前使用的是 Anon Key，适合前端使用。如需更高级的安全控制，建议：
+✅ **RLS 策略已配置**: 已为所有表配置了 Row Level Security 策略，允许匿名用户和认证用户访问。
 
-1. 配置 Row Level Security (RLS) 策略
-2. 使用 Service Role Key 进行服务端操作
-3. 实现用户认证系统
+⚠️ **重要**: 当前使用的是 Anon Key，适合前端使用。已配置的 RLS 策略允许：
+- 匿名用户创建会话和发送消息
+- 所有人读取会话和消息
+- 管理员和客服可以管理数据
+
+如需更高级的安全控制，建议：
+1. 使用 Service Role Key 进行服务端操作
+2. 实现用户认证系统
+3. 根据业务需求调整 RLS 策略
 
 ## 测试建议
 

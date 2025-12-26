@@ -56,6 +56,22 @@ export function ChatWindow() {
         // 使用 localStorage 存储会话 ID，以便刷新后保持会话
         let convId = localStorage.getItem('chat_conversation_id');
         
+        // 如果存在会话 ID，验证会话是否仍然存在
+        if (convId) {
+          const { data: existingConv, error: checkError } = await supabase
+            .from('conversations')
+            .select('id')
+            .eq('id', convId)
+            .single();
+
+          // 如果会话不存在或查询失败，清除 localStorage 并创建新会话
+          if (checkError || !existingConv) {
+            console.warn('会话不存在，创建新会话:', checkError);
+            localStorage.removeItem('chat_conversation_id');
+            convId = null;
+          }
+        }
+        
         if (!convId) {
           // 创建新会话
           const { data: conversation, error: convError } = await supabase
@@ -64,7 +80,10 @@ export function ChatWindow() {
             .select()
             .single();
 
-          if (convError) throw convError;
+          if (convError) {
+            console.error('创建会话失败:', convError);
+            throw convError;
+          }
           convId = conversation.id;
           localStorage.setItem('chat_conversation_id', convId);
         }
@@ -163,9 +182,69 @@ export function ChatWindow() {
   }, [messages]);
 
   const handleSendMessage = async (content: string, type: 'text' | 'emoji' | 'image', imageUrl?: string) => {
-    if (!conversationId) {
-      console.error('会话未初始化');
-      return;
+    // 确保有有效的会话 ID
+    let currentConvId = conversationId;
+    
+    if (!currentConvId) {
+      console.error('会话未初始化，尝试创建新会话');
+      // 尝试创建新会话
+      try {
+        const { data: conversation, error: convError } = await supabase
+          .from('conversations')
+          .insert({ status: 'active' })
+          .select()
+          .single();
+
+        if (convError) {
+          console.error('创建会话失败:', convError);
+          alert('无法创建会话，请刷新页面重试');
+          return;
+        }
+
+        currentConvId = conversation.id;
+        localStorage.setItem('chat_conversation_id', currentConvId);
+        setConversationId(currentConvId);
+      } catch (error) {
+        console.error('创建会话异常:', error);
+        alert('无法创建会话，请刷新页面重试');
+        return;
+      }
+    } else {
+      // 验证会话是否存在
+      const { data: convCheck, error: checkError } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('id', currentConvId)
+        .single();
+
+      if (checkError || !convCheck) {
+        console.error('会话不存在，重新创建:', checkError);
+        // 清除无效的会话 ID
+        localStorage.removeItem('chat_conversation_id');
+        
+        // 创建新会话
+        try {
+          const { data: conversation, error: convError } = await supabase
+            .from('conversations')
+            .insert({ status: 'active' })
+            .select()
+            .single();
+
+          if (convError) {
+            console.error('重新创建会话失败:', convError);
+            alert('无法创建会话，请刷新页面重试');
+            return;
+          }
+
+          currentConvId = conversation.id;
+          localStorage.setItem('chat_conversation_id', currentConvId);
+          setConversationId(currentConvId);
+        } catch (error) {
+          console.error('重新创建会话异常:', error);
+          alert('无法创建会话，请刷新页面重试');
+          return;
+        }
+      }
     }
 
     // 根据类型构建消息内容
@@ -192,11 +271,11 @@ export function ChatWindow() {
     setMessages((prev) => [...prev, optimisticMessage]);
 
     try {
-      // 发送消息到 Supabase
+      // 发送消息到 Supabase（使用验证后的会话 ID）
       const { data: newMessage, error } = await supabase
         .from('messages')
         .insert({
-          conversation_id: conversationId,
+          conversation_id: currentConvId,
           sender_type: 'customer',
           content: messageContent,
         })
@@ -214,7 +293,7 @@ export function ChatWindow() {
       await supabase
         .from('conversations')
         .update({ updated_at: new Date().toISOString() })
-        .eq('id', conversationId);
+        .eq('id', currentConvId);
 
       // 用真实消息替换临时消息
       setMessages((prev) => {
