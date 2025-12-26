@@ -1,0 +1,9 @@
+# 忽略不需要部署的文件
+node_modules
+.git
+.gitignore
+.env.local
+*.md
+.vscode
+.cursor
+
